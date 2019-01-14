@@ -13,7 +13,8 @@ const config = {
   aliIconFont: '',
   env: {
     mock: {
-      '/security': 'http://yapi.demo.qunar.com/mock/9638'
+      '/security': 'http://yapi.demo.qunar.com/mock/9638',
+      'deep-member-center': 'http://yapi.deepexi.io:5002/mock/682'
     },
     dev: {
       '/security': 'http://your.dev.server'
