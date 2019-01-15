@@ -69,27 +69,36 @@ export default {
           {
             prop: 'memberDto.levelId',
             label: '会员等级',
-            formatter: row => LEVEL[row.memberDto.levelId]
+            formatter: row => {
+              console.log(row.memberDto)
+              return row.memberDto !== null ? LEVEL[row.memberDto.levelId] : ''
+            }
           },
           {
             prop: 'memberDto.registerAt',
             label: '注册时间',
             formatter: row => {
-              return formatDate(row.memberDto.registerAt, 'YYYY-MM-DD')
+              return row.memberDto !== null
+                ? formatDate(row.memberDto.registerAt, 'YYYY-MM-DD')
+                : ''
             }
           },
           {
             prop: 'createdAt',
             label: '拉黑日期',
             formatter: row => {
-              return formatDate(row.createdAt, 'YYYY-MM-DD')
+              return row.memberDto !== null
+                ? formatDate(row.createdAt, 'YYYY-MM-DD')
+                : ''
             }
           },
           {
             prop: 'deadline',
             label: '恢复日期',
             formatter: row => {
-              return formatDate(row.deadline, 'YYYY-MM-DD')
+              return row.memberDto !== null
+                ? formatDate(row.deadline, 'YYYY-MM-DD')
+                : ''
             }
           }
         ],
