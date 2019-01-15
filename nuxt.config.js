@@ -14,7 +14,8 @@ const config = {
   env: {
     mock: {
       '/security': 'http://yapi.demo.qunar.com/mock/9638',
-      'deep-member-center': 'http://yapi.deepexi.io:5002/mock/682'
+      // '/deepexi-member-center': 'http://yapi.deepexi.io:5002/mock/682'
+      '/deepexi-member-center': 'http://119.29.28.59'
     },
     dev: {
       '/security': 'http://your.dev.server'

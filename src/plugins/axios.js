@@ -5,10 +5,12 @@ export default function(context) {
   let {$axios, store, app, redirect} = context
 
   $axios.onRequest(config => {
+    config.headers.Authorization = 'Bearer 1111'
     let url = config.url
 
     url += url.indexOf('?') > -1 ? '&' : '?'
-    url += `token=${store.state.token}`
+    // url += `token=${store.state.token}`
+    url += 'tenantId=tenant1'
 
     // 调用用户中心的接口需要加上projectNo
     if (url.indexOf('/security/') > -1) {
