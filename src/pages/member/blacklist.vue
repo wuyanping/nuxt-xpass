@@ -11,9 +11,7 @@
           :prop="extraParams.username"
           class="el-form-item is-required"
         >
-          <div class="el-form-item__label" :style="{width: '80px'}">
-            会员账号
-          </div>
+          <div class="el-form-item__label">会员账号</div>
           <el-input
             placeholder="请输入会员账号"
             v-model="extraParams.username"
