@@ -189,7 +189,7 @@ export default {
             ],
             $options: Object.keys(STATUS).map(v => {
               return {
-                value: v,
+                value: v == 'all' ? '' : v,
                 label: STATUS[v]
               }
             }),
