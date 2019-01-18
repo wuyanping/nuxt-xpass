@@ -7,35 +7,6 @@
         :extraParams="extraParams"
         :onNew="onNew"
       >
-        <!-- 表单新增的 -->
-        <div
-          slot="form"
-          :prop="extraParams.username"
-          class="el-form-item is-required ml"
-        >
-          <div class="el-form-item__label">会员账号</div>
-          <!-- 输入会员账号可自动进行搜索，选择后其他基本信息根据会员账号自动读取 -->
-          <el-select
-            v-model="extraParams.username"
-            filterable
-            remote
-            clearable
-            placeholder="输入会员账号可自动搜索"
-            :remote-method="remoteMethod"
-            default-first-option
-            :loading="loading"
-            @change="change"
-            @clear="clear"
-          >
-            <el-option
-              v-for="item in asynOptions"
-              :key="item.id"
-              :label="item.username"
-              :value="item.username"
-            >
-            </el-option>
-          </el-select>
-        </div>
       </el-data-table>
     </template>
   </div>
@@ -43,6 +14,7 @@
 <script>
 import {STATUS, LEVEL} from '~/const/const'
 import {formatDate, isArray} from '~/const/filter'
+import asynSelect from '~/components/asynSelect'
 
 export default {
   name: 'blacklist',
@@ -203,6 +175,18 @@ export default {
         },
         form: [
           {
+            $id: 'avatarUrl',
+            component: asynSelect,
+            label: '会员账号',
+            rules: [
+              {
+                required: true,
+                message: '请输入会员账号',
+                trigger: 'blur'
+              }
+            ]
+          },
+          {
             $type: 'input',
             $id: 'nickName',
             label: '昵称',
@@ -301,12 +285,12 @@ export default {
       },
       // 额外的参数
       extraParams: {
-        username: '',
+        // username: '',
         memberId: ''
       },
-      asynOptions: [], // 异步过滤好的option
-      asynList: [], // 异步获取的list
-      loading: false,
+      // asynOptions: [], // 异步过滤好的option
+      // asynList: [], // 异步获取的list
+      // loading: false,
       timer: null,
       // 异步需要更新的表单字段
       asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt']
