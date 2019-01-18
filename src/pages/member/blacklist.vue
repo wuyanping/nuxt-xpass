@@ -1,12 +1,6 @@
 <template>
   <div id="blacklist">
-    <el-data-table
-      ref="dataTable"
-      v-bind="tableConfig"
-      :extraParams="extraParams"
-      :onNew="onNew"
-    >
-    </el-data-table>
+    <el-data-table ref="dataTable" v-bind="tableConfig"> </el-data-table>
 
     <!-- 弹框 -->
     <el-dialog
@@ -18,7 +12,11 @@
       <div class="el-form-item is-required ml">
         <div class="el-form-item__label">会员账号</div>
         <!-- 输入会员账号可自动进行搜索，选择后其他基本信息根据会员账号自动读取 -->
-        <asynSelect :rendererRef="$refs.blacklistForm"></asynSelect>
+        <asynSelect
+          @updateForm="updateForm"
+          @updateData="updateData"
+          :value="username"
+        ></asynSelect>
       </div>
 
       <el-form-renderer
@@ -208,9 +206,9 @@ export default {
       },
       // 额外的参数
       extraParams: {
-        // username: '',
         memberId: ''
       },
+      username: '',
       // asynOptions: [], // 异步过滤好的option
       // asynList: [], // 异步获取的list
       // loading: false,
@@ -328,28 +326,61 @@ export default {
       // this.dialogConfig.dialogVisible = false
     },
 
-    // 表单提交
-    confirm() {
-      this.dialogConfig.dialogVisible = false
-    },
-
     // 取消表单提交
     cancel() {
       this.dialogConfig.dialogVisible = false
     },
 
+    // 更新表单
+    updateForm(val) {
+      this.$refs.blacklistForm.updateForm(val)
+    },
+
+    // 更新data的数据
+    updateData({key, val}) {
+      this[key] = val
+    },
+
     // 自定义表单提交
-    onNew(data, row) {
-      console
+    confirm() {
+      // this.dialogConfig.dialogVisible = false
       // 清空额外参数
-      this.extraParams = {
-        username: '',
-        memberId: ''
+      // this.extraParams = {
+      //   username: '',
+      //   memberId: ''
+      // }
+
+      console.log(this.username)
+      if (this.username.trim().length < 0) {
+        this.$message({
+          type: 'warning',
+          message: '请输入会员账号'
+        })
+        return
       }
-      return this.$axios.$post(this.memberUrl, {
-        memberId: data.memberId ? data.memberId : '',
-        deadline: data.deadline ? data.deadline : '',
-        reason: data.reason ? data.reason : ''
+      this.$refs.blacklistForm.validate(valid => {
+        if (valid) {
+          let data = this.$refs.blacklistForm.getFormValue()
+          console.log(this.$refs.blacklistForm.getFormValue())
+          alert('submit!')
+          this.$axios
+            .$post(this.memberUrl, {
+              memberId: this.extraParams.memberId
+                ? this.extraParams.memberId
+                : '',
+              deadline: data.deadline ? data.deadline : '',
+              reason: data.reason ? data.reason : ''
+            })
+            .then(resp => {
+              this.$message({
+                message: '添加黑名单成功'
+              })
+            })
+            .catch(err => {})
+        } else {
+          console.log('error submit!!')
+          return false
+        }
       })
     },
 

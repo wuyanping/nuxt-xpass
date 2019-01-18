@@ -67,8 +67,13 @@ export default {
             this.asynUpdataFormItem.forEach(item => {
               obj[item] = res[item]
             })
-            this.$refs.dataTable.$refs.dialogForm.updateForm(obj)
-            this.extraParams.memberId = res.id
+            // this.$refs.dataTable.$refs.dialogForm.updateForm(obj)
+            this.$emit('updateForm', obj)
+            // this.extraParams.memberId = res.id
+            this.$emit('updateData', {
+              key: 'extraParams',
+              val: {memberId: res.id}
+            })
           } else {
             this.$message({
               type: 'warning',
@@ -89,7 +94,10 @@ export default {
       console.log('remoteMethod --- ')
       console.log(query)
       console.log(this.extraParams)
-
+      this.$emit('updateData', {
+        key: 'username',
+        val: query
+      })
       // 如果select的值 === 原来的值的时候，不用清空关联数据。为了防止select 一foucs 就清空关联数据
       // if (!(query.trim() === this.extraParams.username.trim())) {
       // let obj = {}
@@ -128,8 +136,9 @@ export default {
       })
       // let dataTable = this.$parent
       console.log(this.rendererRef)
+      this.$emit('updateForm', obj)
       // this.$parent.$refs.dialogForm.updateForm(obj)
-      // this.searchMember(this.extraParams.username)
+      this.searchMember(this.selectValue)
     },
 
     // 可清空的单选模式下用户点击清空按钮时触发
