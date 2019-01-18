@@ -29,6 +29,9 @@ export default {
   props: {
     value: {
       type: String
+    },
+    rendererRef: {
+      type: Object
     }
   },
   data() {
@@ -40,6 +43,10 @@ export default {
       // 异步需要更新的表单字段
       asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt']
     }
+  },
+  mounted() {
+    console.log('this.rendererRef----')
+    console.log(this.rendererRef)
   },
   methods: {
     // 查找会员账号，自动补全其他会员信息
@@ -119,9 +126,10 @@ export default {
       this.asynUpdataFormItem.forEach(item => {
         obj[item] = ''
       })
-      let dataTable = this.$parent.$parent.$parent.$parent.$parent.$parent
-      dataTable.$refs.dialogForm.updateForm(obj)
-      this.searchMember(this.extraParams.username)
+      // let dataTable = this.$parent
+      console.log(this.rendererRef)
+      // this.$parent.$refs.dialogForm.updateForm(obj)
+      // this.searchMember(this.extraParams.username)
     },
 
     // 可清空的单选模式下用户点击清空按钮时触发

@@ -1,23 +1,48 @@
 <template>
   <div id="blacklist">
-    <template>
-      <el-data-table
-        ref="dataTable"
-        v-bind="tableConfig"
-        :extraParams="extraParams"
-        :onNew="onNew"
-      >
-      </el-data-table>
-    </template>
+    <el-data-table
+      ref="dataTable"
+      v-bind="tableConfig"
+      :extraParams="extraParams"
+      :onNew="onNew"
+    >
+    </el-data-table>
+
+    <!-- 弹框 -->
+    <el-dialog
+      :title="dialogConfig.title"
+      :visible.sync="dialogConfig.dialogVisible"
+      :before-close="handleClose"
+      :close-on-click-modal="false"
+    >
+      <div class="el-form-item is-required ml">
+        <div class="el-form-item__label">会员账号</div>
+        <!-- 输入会员账号可自动进行搜索，选择后其他基本信息根据会员账号自动读取 -->
+        <asynSelect :rendererRef="$refs.blacklistForm"></asynSelect>
+      </div>
+
+      <el-form-renderer
+        label-width="100px"
+        :content="content"
+        ref="blacklistForm"
+      ></el-form-renderer>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="cancel">取 消</el-button>
+        <el-button type="primary" @click="confirm">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
 import {STATUS, LEVEL} from '~/const/const'
 import {formatDate, isArray} from '~/const/filter'
-import asynSelect from '~/components/asynSelect'
+import AsynSelect from '~/components/asynSelect'
 
 export default {
   name: 'blacklist',
+  components: {
+    AsynSelect
+  },
   data() {
     return {
       // 黑名单地址
@@ -32,12 +57,22 @@ export default {
         hasOperation: true,
         isTree: false,
         url: '/deepexi-member-center/api/v1/memberBlacklists',
-        hasNew: true,
+        hasNew: false,
         hasEdit: false,
         hasView: false,
         hasDelete: true,
         single: false,
         extraButtons: [],
+        headerButtons: [
+          {
+            text: '新增黑名单',
+            style: 'background-color:#409EFF;border:none;color:#fff',
+            atClick: () => {
+              this.dialogConfig.dialogVisible = true
+              return Promise.resolve(false)
+            }
+          }
+        ],
         columns: [
           {
             prop: 'username',
@@ -169,118 +204,6 @@ export default {
               placeholder: '请选择'
             }
           }
-        ],
-        formAttrs: {
-          'label-width': '120px'
-        },
-        form: [
-          {
-            $id: 'avatarUrl',
-            component: asynSelect,
-            label: '会员账号',
-            rules: [
-              {
-                required: true,
-                message: '请输入会员账号',
-                trigger: 'blur'
-              }
-            ]
-          },
-          {
-            $type: 'input',
-            $id: 'nickName',
-            label: '昵称',
-            $el: {
-              placeholder: '请输入',
-              disabled: true
-            },
-            rules: [
-              {
-                required: true,
-                message: '请输入昵称',
-                trigger: 'blur'
-              }
-            ]
-          },
-          {
-            $type: 'input',
-            $id: 'phone',
-            label: '手机号',
-            $el: {
-              placeholder: '请输入',
-              disabled: true
-            },
-            rules: [
-              {
-                required: false,
-                message: '请输入手机号',
-                trigger: 'blur'
-              }
-            ]
-          },
-          {
-            $type: 'input',
-            $id: 'levelId',
-            label: '会员等级',
-            $el: {
-              placeholder: '请输入',
-              disabled: true
-            },
-            rules: [
-              {
-                required: false,
-                message: '请输入会员等级',
-                trigger: 'blur'
-              }
-            ]
-          },
-          {
-            $type: 'input',
-            $id: 'registerAt',
-            label: '注册时间',
-            $el: {
-              placeholder: '请输入',
-              disabled: true
-            },
-            rules: [
-              {
-                required: false,
-                message: '请输入注册时间',
-                trigger: 'blur'
-              }
-            ]
-          },
-          {
-            $type: 'date-picker',
-            $id: 'deadline',
-            label: '拉黑截至日期',
-            $el: {
-              placeholder: '请输入',
-              valueFormat: 'yyyy-MM-dd'
-            },
-            rules: [
-              {
-                required: true,
-                message: '请输入拉黑截至日期',
-                trigger: 'blur'
-              }
-            ]
-          },
-          {
-            $type: 'input',
-            $id: 'reason',
-            label: '拉黑原因',
-            $el: {
-              placeholder: '请输入'
-            },
-            rules: [
-              {
-                required: true,
-                message: '请输入拉黑原因',
-                trigger: 'blur'
-              }
-            ]
-          }
         ]
       },
       // 额外的参数
@@ -293,11 +216,128 @@ export default {
       // loading: false,
       timer: null,
       // 异步需要更新的表单字段
-      asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt']
+      asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt'],
+      dialogConfig: {
+        title: '新增黑名单',
+        dialogVisible: false
+      },
+      // 新增表单内容
+      content: [
+        {
+          $type: 'input',
+          $id: 'nickName',
+          label: '昵称',
+          $el: {
+            placeholder: '请输入',
+            disabled: true
+          },
+          rules: [
+            {
+              required: true,
+              message: '请输入昵称',
+              trigger: 'blur'
+            }
+          ]
+        },
+        {
+          $type: 'input',
+          $id: 'phone',
+          label: '手机号',
+          $el: {
+            placeholder: '请输入',
+            disabled: true
+          },
+          rules: [
+            {
+              required: false,
+              message: '请输入手机号',
+              trigger: 'blur'
+            }
+          ]
+        },
+        {
+          $type: 'input',
+          $id: 'levelId',
+          label: '会员等级',
+          $el: {
+            placeholder: '请输入',
+            disabled: true
+          },
+          rules: [
+            {
+              required: false,
+              message: '请输入会员等级',
+              trigger: 'blur'
+            }
+          ]
+        },
+        {
+          $type: 'input',
+          $id: 'registerAt',
+          label: '注册时间',
+          $el: {
+            placeholder: '请输入',
+            disabled: true
+          },
+          rules: [
+            {
+              required: false,
+              message: '请输入注册时间',
+              trigger: 'blur'
+            }
+          ]
+        },
+        {
+          $type: 'date-picker',
+          $id: 'deadline',
+          label: '拉黑截至日期',
+          $el: {
+            placeholder: '请输入',
+            valueFormat: 'yyyy-MM-dd'
+          },
+          rules: [
+            {
+              required: true,
+              message: '请输入拉黑截至日期',
+              trigger: 'blur'
+            }
+          ]
+        },
+        {
+          $type: 'input',
+          $id: 'reason',
+          label: '拉黑原因',
+          $el: {
+            placeholder: '请输入'
+          },
+          rules: [
+            {
+              required: true,
+              message: '请输入拉黑原因',
+              trigger: 'blur'
+            }
+          ]
+        }
+      ]
     }
   },
   mounted() {},
   methods: {
+    // 点击关闭图标或遮罩关闭 Dialog 时起效
+    handleClose() {
+      // this.dialogConfig.dialogVisible = false
+    },
+
+    // 表单提交
+    confirm() {
+      this.dialogConfig.dialogVisible = false
+    },
+
+    // 取消表单提交
+    cancel() {
+      this.dialogConfig.dialogVisible = false
+    },
+
     // 自定义表单提交
     onNew(data, row) {
       console
@@ -408,7 +448,7 @@ export default {
         border-color: rgb(220, 223, 230);
     }
     .ml{
-        margin-left: 40px;
+        margin-left: 20px;
     }
 }
 </style>
