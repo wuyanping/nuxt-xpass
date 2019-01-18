@@ -13,6 +13,7 @@ import {
   MessageBox,
   Message,
   Radio,
+  RadioGroup,
   Checkbox,
   Form,
   FormItem,
@@ -32,10 +33,12 @@ import {
   DropdownMenu,
   DropdownItem,
   Row,
-  Col
+  Col,
+  Card
 } from 'element-ui'
 import ElFormRenderer from '@femessage/el-form-renderer'
 import ElDataTable from 'el-data-table'
+// import uploadToAli from '@femessage/upload-to-ali'
 
 Vue.prototype.$ELEMENT = {size: 'medium'}
 
@@ -63,11 +66,14 @@ Vue.use(DropdownItem)
 Vue.use(Row)
 Vue.use(Col)
 Vue.use(Radio)
+Vue.use(RadioGroup)
 Vue.use(Checkbox)
 // Vue.use(Switch)
+// Vue.use(Loading)
 Vue.use(Loading.directive)
 Vue.use(Dialog)
 Vue.use(Tooltip)
+Vue.use(Card)
 // Vue.use(Cascader)
 // Vue.use(Autocomplete)
 
@@ -77,6 +83,7 @@ Vue.use(Tooltip)
 
 Vue.component('el-form-renderer', ElFormRenderer)
 Vue.component('el-data-table', ElDataTable)
+// Vue.component('upload-to-ali', uploadToAli)
 
 Vue.prototype.$notify = Notification
 Vue.$notify = Notification
