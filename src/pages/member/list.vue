@@ -5,7 +5,7 @@
   </div>
 </template>
 <script>
-import {SEX, USERSTATUS, LEVEL} from '~/const/const'
+import {SEX, USERSTATUS, LEVEL, STATUS} from '~/const/const'
 import {formatDate, isArray} from '~/const/filter'
 
 export default {
@@ -119,12 +119,18 @@ export default {
               'end-placeholder': '结束日期'
             },
             inputFormat: row => {
-              return [row.registerAtStart, row.registerAtEnd]
+              if (row) {
+                return [row.registerAtStart, row.registerAtEnd]
+              }
             },
             outputFormat: val => {
-              return {
-                registerAtStart: val[0],
-                registerAtEnd: val[1]
+              console.log('outputFormat -- ')
+              console.log(val)
+              if (val) {
+                return {
+                  registerAtStart: val[0],
+                  registerAtEnd: val[1]
+                }
               }
             }
           },
@@ -157,16 +163,12 @@ export default {
             label: '会员状态',
             $id: 'states',
             $type: 'select',
-            $options: [
-              {
-                value: 1,
-                label: '全部'
-              },
-              {
-                value: 2,
-                label: '正常'
+            $options: Object.keys(STATUS).map(v => {
+              return {
+                value: v == 'all' ? '' : v,
+                label: STATUS[v]
               }
-            ]
+            })
           }
         ],
         form: [

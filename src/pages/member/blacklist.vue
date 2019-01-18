@@ -6,17 +6,17 @@
     <el-dialog
       :title="dialogConfig.title"
       :visible.sync="dialogConfig.dialogVisible"
-      :before-close="handleClose"
+      :before-close="cancel"
       :close-on-click-modal="false"
     >
       <div class="el-form-item is-required ml">
         <div class="el-form-item__label">会员账号</div>
-        <!-- 输入会员账号可自动进行搜索，选择后其他基本信息根据会员账号自动读取 -->
-        <asynSelect
+        <AsynFilterSelect
           @updateForm="updateForm"
           @updateData="updateData"
           :value="username"
-        ></asynSelect>
+          :asynUpdataFormItem="asynUpdataFormItem"
+        ></AsynFilterSelect>
       </div>
 
       <el-form-renderer
@@ -26,7 +26,9 @@
       ></el-form-renderer>
       <span slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="confirm">确 定</el-button>
+        <el-button type="primary" @click="confirm" :loading="loading"
+          >确 定</el-button
+        >
       </span>
     </el-dialog>
   </div>
@@ -34,12 +36,12 @@
 <script>
 import {STATUS, LEVEL} from '~/const/const'
 import {formatDate, isArray} from '~/const/filter'
-import AsynSelect from '~/components/asynSelect'
+import AsynFilterSelect from '~/components/asynFilterSelect'
 
 export default {
   name: 'blacklist',
   components: {
-    AsynSelect
+    AsynFilterSelect
   },
   data() {
     return {
@@ -153,13 +155,17 @@ export default {
             },
             // 输入的日期格式
             inputFormat: row => {
-              return [row.registerAtStart, row.registerAtEnd]
+              if (row) {
+                return [row.registerAtStart, row.registerAtEnd]
+              }
             },
             // 输出的日期格式
             outputFormat: val => {
-              return {
-                registerAtStart: val[0],
-                registerAtEnd: val[1]
+              if (val) {
+                return {
+                  registerAtStart: val[0],
+                  registerAtEnd: val[1]
+                }
               }
             }
           },
@@ -180,7 +186,7 @@ export default {
             ],
             $options: Object.keys(LEVEL).map(v => {
               return {
-                value: v,
+                value: v == 'all' ? '' : v,
                 label: LEVEL[v]
               }
             })
@@ -202,23 +208,22 @@ export default {
               placeholder: '请选择'
             }
           }
-        ]
+        ],
+        from: []
       },
+      // 弹框配置
+      dialogConfig: {
+        title: '新增黑名单',
+        dialogVisible: false
+      },
+      loading: false,
       // 额外的参数
       extraParams: {
         memberId: ''
       },
       username: '',
-      // asynOptions: [], // 异步过滤好的option
-      // asynList: [], // 异步获取的list
-      // loading: false,
-      timer: null,
       // 异步需要更新的表单字段
       asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt'],
-      dialogConfig: {
-        title: '新增黑名单',
-        dialogVisible: false
-      },
       // 新增表单内容
       content: [
         {
@@ -231,7 +236,7 @@ export default {
           },
           rules: [
             {
-              required: true,
+              required: false,
               message: '请输入昵称',
               trigger: 'blur'
             }
@@ -247,7 +252,7 @@ export default {
           },
           rules: [
             {
-              required: false,
+              required: true,
               message: '请输入手机号',
               trigger: 'blur'
             }
@@ -321,16 +326,6 @@ export default {
   },
   mounted() {},
   methods: {
-    // 点击关闭图标或遮罩关闭 Dialog 时起效
-    handleClose() {
-      // this.dialogConfig.dialogVisible = false
-    },
-
-    // 取消表单提交
-    cancel() {
-      this.dialogConfig.dialogVisible = false
-    },
-
     // 更新表单
     updateForm(val) {
       this.$refs.blacklistForm.updateForm(val)
@@ -341,28 +336,28 @@ export default {
       this[key] = val
     },
 
-    // 自定义表单提交
-    confirm() {
-      // this.dialogConfig.dialogVisible = false
-      // 清空额外参数
-      // this.extraParams = {
-      //   username: '',
-      //   memberId: ''
-      // }
+    // 取消表单提交
+    cancel() {
+      this.$refs.blacklistForm.resetFields()
+      this.username = ''
+      this.dialogConfig.dialogVisible = false
+    },
 
+    // 表单提交
+    confirm() {
       console.log(this.username)
-      if (this.username.trim().length < 0) {
+      if (this.username.trim().length === 0) {
         this.$message({
           type: 'warning',
           message: '请输入会员账号'
         })
+        this.$refs.blacklistForm.validate()
         return
       }
       this.$refs.blacklistForm.validate(valid => {
         if (valid) {
+          this.loading = true
           let data = this.$refs.blacklistForm.getFormValue()
-          console.log(this.$refs.blacklistForm.getFormValue())
-          alert('submit!')
           this.$axios
             .$post(this.memberUrl, {
               memberId: this.extraParams.memberId
@@ -372,102 +367,19 @@ export default {
               reason: data.reason ? data.reason : ''
             })
             .then(resp => {
-              this.$message({
-                message: '添加黑名单成功'
-              })
+              this.loading = false
+              this.$refs.dataTable.getList()
+              this.$refs.dataTable.showMessage(true)
+              this.cancel()
             })
-            .catch(err => {})
+            .catch(err => {
+              this.loading = false
+            })
         } else {
           console.log('error submit!!')
           return false
         }
       })
-    },
-
-    // 查找会员账号，自动补全其他会员信息
-    searchMember(val) {
-      if (val.length == 0) {
-        return
-      }
-      this.$axios
-        .$get(`/deepexi-member-center/api/v1/members/getMember/${val}`, {
-          params: {}
-        })
-        .then(resp => {
-          // console.log(resp)
-          if (resp.payload !== null) {
-            console.log('会员存在')
-            let res = resp.payload
-            let obj = {}
-            this.asynUpdataFormItem.forEach(item => {
-              obj[item] = res[item]
-            })
-            this.$refs.dataTable.$refs.dialogForm.updateForm(obj)
-            this.extraParams.memberId = res.id
-          } else {
-            this.$message({
-              type: 'warning',
-              message: '会员账号不存在！'
-            })
-          }
-        })
-        .catch(err => {
-          this.$message({
-            type: 'warning',
-            message: '服务器错误'
-          })
-        })
-    },
-
-    // select 值改变的时候触发 远程搜索方法
-    remoteMethod(query) {
-      console.log('remoteMethod --- ')
-      console.log(query)
-      console.log(this.extraParams)
-
-      // 如果select的值 === 原来的值的时候，不用清空关联数据。为了防止select 一foucs 就清空关联数据
-      // if (!(query.trim() === this.extraParams.username.trim())) {
-      // let obj = {}
-      // this.asynUpdataFormItem.forEach(item => {
-      //     obj[item] = ''
-      // })
-      // this.$refs.dataTable.$refs.dialogForm.updateForm(obj)
-      // }
-      if (query !== '') {
-        // this.extraParams.username = query
-        this.loading = true
-        this.timer = setTimeout(() => {
-          this.$axios
-            .$get('/deepexi-member-center/api/v1/members/list')
-            .then(resp => {
-              this.loading = false
-              this.asynList = resp.payload
-              this.asynOptions = this.asynList.filter(item => {
-                return (
-                  item.username.toLowerCase().indexOf(query.toLowerCase()) > -1
-                )
-              })
-            })
-        }, 200)
-      } else {
-        this.asynOptions = []
-      }
-    },
-
-    // 选中值发生变化时触发
-    change() {
-      console.log('change --- ')
-      let obj = {}
-      this.asynUpdataFormItem.forEach(item => {
-        obj[item] = ''
-      })
-      this.$refs.dataTable.$refs.dialogForm.updateForm(obj)
-      this.searchMember(this.extraParams.username)
-    },
-
-    // 可清空的单选模式下用户点击清空按钮时触发
-    clear() {
-      console.log('clear --- ')
     }
   }
 }

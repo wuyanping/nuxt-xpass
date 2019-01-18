@@ -19,14 +19,10 @@
 </template>
 <script>
 import uploadToAli from '@femessage/upload-to-ali'
-// import CommonRadioGroup from '~/components/CommonRadioGroup'
 import {phone} from '~/const/validate'
 
 export default {
   name: 'newMember',
-  components: {
-    // CommonRadioGroup
-  },
   data() {
     return {
       url: '/deepexi-member-center/api/v1/members/add', // 这个接口后台会员账号有重命名的验证
@@ -112,35 +108,6 @@ export default {
             }
           ]
         },
-        // 自定义表单的话把数据放el对象里
-        // {
-        //     $id: 'sex',
-        //      	// $type: 'radio-group',
-        //      	component: CommonRadioGroup,
-        //      	label: '性别',
-        //      	$el: {
-        //      	  // placeholder: '请选择'
-        //      	  options: [
-        //       	  // 注意：element radio-group 通过 label 而不是 value 来匹配值
-        //       	  // man：男，woman：女
-        //       	  // ？？？ value 怎么设置
-        //       	  { label: 'man', value: '男'},
-        //       	  { label: 'woman', value: '女'},
-        //       	]
-        //      	},
-        //      	"rules":[
-        //         {
-        //             "required":true,
-        //             "message":"请选择性别",
-        //             "trigger":"change"
-        //         }
-        //     ],
-        //      	// $default: 'woman',
-        //      	$options: [
-        //      	  { label: '男', value: 'man'},
-        //      	  { label: '女', value: 'woman'},
-        //      	]
-        // },
         {
           $id: 'sex',
           $type: 'radio-group',
@@ -211,6 +178,7 @@ export default {
                 this.$message({
                   message: '新增会员成功',
                   type: 'success',
+                  duration: 1000,
                   onClose: () => {
                     this.$router.push('/member/list')
                   }

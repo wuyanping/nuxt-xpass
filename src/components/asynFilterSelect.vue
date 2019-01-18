@@ -5,7 +5,7 @@
       filterable
       remote
       clearable
-      placeholder="输入会员账号可自动搜索"
+      placeholder="输入会员账号可自动搜索，选择后其他信息会自动读取"
       :remote-method="remoteMethod"
       default-first-option
       :loading="loading"
@@ -30,8 +30,11 @@ export default {
     value: {
       type: String
     },
-    rendererRef: {
-      type: Object
+    asynUpdataFormItem: {
+      type: Array,
+      default() {
+        return []
+      }
     }
   },
   data() {
@@ -39,15 +42,11 @@ export default {
       selectValue: this.value,
       asynOptions: [], // 异步过滤好的option
       asynList: [], // 异步获取的list
-      loading: false,
-      // 异步需要更新的表单字段
-      asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt']
+      loading: false
     }
   },
-  mounted() {
-    console.log('this.rendererRef----')
-    console.log(this.rendererRef)
-  },
+  computed: {},
+  mounted() {},
   methods: {
     // 查找会员账号，自动补全其他会员信息
     searchMember(val) {
@@ -59,7 +58,6 @@ export default {
           params: {}
         })
         .then(resp => {
-          // console.log(resp)
           if (resp.payload !== null) {
             console.log('会员存在')
             let res = resp.payload
@@ -67,9 +65,7 @@ export default {
             this.asynUpdataFormItem.forEach(item => {
               obj[item] = res[item]
             })
-            // this.$refs.dataTable.$refs.dialogForm.updateForm(obj)
             this.$emit('updateForm', obj)
-            // this.extraParams.memberId = res.id
             this.$emit('updateData', {
               key: 'extraParams',
               val: {memberId: res.id}
@@ -92,24 +88,9 @@ export default {
     // select 值改变的时候触发 远程搜索方法
     remoteMethod(query) {
       console.log('remoteMethod --- ')
-      console.log(query)
-      console.log(this.extraParams)
-      this.$emit('updateData', {
-        key: 'username',
-        val: query
-      })
-      // 如果select的值 === 原来的值的时候，不用清空关联数据。为了防止select 一foucs 就清空关联数据
-      // if (!(query.trim() === this.extraParams.username.trim())) {
-      // let obj = {}
-      // this.asynUpdataFormItem.forEach(item => {
-      //     obj[item] = ''
-      // })
-      // this.$refs.dataTable.$refs.dialogForm.updateForm(obj)
-      // }
       if (query !== '') {
-        // this.extraParams.username = query
         this.loading = true
-        this.timer = setTimeout(() => {
+        setTimeout(() => {
           this.$axios
             .$get('/deepexi-member-center/api/v1/members/list')
             .then(resp => {
@@ -134,18 +115,30 @@ export default {
       this.asynUpdataFormItem.forEach(item => {
         obj[item] = ''
       })
-      // let dataTable = this.$parent
-      console.log(this.rendererRef)
+      this.$emit('updateData', {
+        key: 'username',
+        val: this.selectValue
+      })
       this.$emit('updateForm', obj)
-      // this.$parent.$refs.dialogForm.updateForm(obj)
       this.searchMember(this.selectValue)
     },
 
     // 可清空的单选模式下用户点击清空按钮时触发
-    clear() {
-      console.log('clear --- ')
+    clear() {}
+  },
+  watch: {
+    value: {
+      deep: true, // 深度 watcher
+      immediate: true, // 该回调将会在侦听开始之后被立即调用
+      handler: function(val, oldVal) {
+        this.selectValue = val
+      }
     }
   }
 }
 </script>
-<style></style>
+<style scoped lang="stylus">
+>>>.el-select{
+  width: 70%;
+}
+</style>
