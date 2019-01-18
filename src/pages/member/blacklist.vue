@@ -27,7 +27,7 @@ export default {
         firstPage: 1,
         dataPath: 'payload.content',
         totalPath: 'payload.totalElements',
-        hasDialog: true,
+        hasDialog: false,
         hasPagination: true,
         hasOperation: true,
         isTree: false,
