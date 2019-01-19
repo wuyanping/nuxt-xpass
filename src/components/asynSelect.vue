@@ -5,7 +5,7 @@
       filterable
       remote
       clearable
-      placeholder="输入会员账号可自动搜索，选择后其他信息会自动读取"
+      placeholder="输入会员账号可自动搜索"
       :remote-method="remoteMethod"
       default-first-option
       :loading="loading"
@@ -30,11 +30,11 @@ export default {
     value: {
       type: String
     },
-    asynUpdataFormItem: {
-      type: Array,
-      default() {
-        return []
-      }
+    rendererRef: {
+      type: Object
+    },
+    a: {
+      type: String
     }
   },
   data() {
@@ -42,31 +42,29 @@ export default {
       selectValue: this.value,
       asynOptions: [], // 异步过滤好的option
       asynList: [], // 异步获取的list
-      loading: false
+      loading: false,
+      // 异步需要更新的表单字段
+      asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt']
     }
   },
-  computed: {},
-  mounted() {},
+  mounted() {
+    console.log('this.mounted----')
+    console.log(this.rendererRef)
+    console.log(this.a)
+    this.$emit('updateForm')
+  },
   methods: {
-    // 更新data的数据
-    updateData({key, val}) {
-      this[key] = val
-    },
-
     // 查找会员账号，自动补全其他会员信息
     searchMember(val) {
       if (val.length == 0) {
         return
       }
-      this.$emit('updateData', {
-        key: 'disable',
-        val: true
-      })
       this.$axios
         .$get(`/deepexi-member-center/api/v1/members/getMember/${val}`, {
           params: {}
         })
         .then(resp => {
+          // console.log(resp)
           if (resp.payload !== null) {
             console.log('会员存在')
             let res = resp.payload
@@ -74,7 +72,9 @@ export default {
             this.asynUpdataFormItem.forEach(item => {
               obj[item] = res[item]
             })
+            // this.$refs.dataTable.$refs.dialogForm.updateForm(obj)
             this.$emit('updateForm', obj)
+            // this.extraParams.memberId = res.id
             this.$emit('updateData', {
               key: 'extraParams',
               val: {memberId: res.id}
@@ -85,19 +85,11 @@ export default {
               message: '会员账号不存在！'
             })
           }
-          this.$emit('updateData', {
-            key: 'disable',
-            val: false
-          })
         })
         .catch(err => {
           this.$message({
             type: 'warning',
             message: '服务器错误'
-          })
-          this.$emit('updateData', {
-            key: 'disable',
-            val: false
           })
         })
     },
@@ -105,13 +97,26 @@ export default {
     // select 值改变的时候触发 远程搜索方法
     remoteMethod(query) {
       console.log('remoteMethod --- ')
+      console.log(query)
+      console.log(this.extraParams)
+      this.$emit('updateData', {
+        key: 'username',
+        val: query
+      })
+      // 如果select的值 === 原来的值的时候，不用清空关联数据。为了防止select 一foucs 就清空关联数据
+      // if (!(query.trim() === this.extraParams.username.trim())) {
+      // let obj = {}
+      // this.asynUpdataFormItem.forEach(item => {
+      //     obj[item] = ''
+      // })
+      // this.$refs.dataTable.$refs.dialogForm.updateForm(obj)
+      // }
       if (query !== '') {
+        // this.extraParams.username = query
         this.loading = true
-        setTimeout(() => {
+        this.timer = setTimeout(() => {
           this.$axios
-            .$get('/deepexi-member-center/api/v1/members/list', {
-              params: {black: true}
-            })
+            .$get('/deepexi-member-center/api/v1/members/list')
             .then(resp => {
               this.loading = false
               this.asynList = resp.payload
@@ -134,30 +139,18 @@ export default {
       this.asynUpdataFormItem.forEach(item => {
         obj[item] = ''
       })
-      this.$emit('updateData', {
-        key: 'username',
-        val: this.selectValue
-      })
+      // let dataTable = this.$parent
+      console.log(this)
       this.$emit('updateForm', obj)
+      // this.$parent.$refs.dialogForm.updateForm(obj)
       this.searchMember(this.selectValue)
     },
 
     // 可清空的单选模式下用户点击清空按钮时触发
-    clear() {}
-  },
-  watch: {
-    // value: {
-    //   deep: true, // 深度 watcher
-    //   immediate: true, // 该回调将会在侦听开始之后被立即调用
-    //   handler: function(val, oldVal) {
-    //     this.selectValue = val
-    //   }
-    // }
+    clear() {
+      console.log('clear --- ')
+    }
   }
 }
 </script>
-<style scoped lang="stylus">
->>>.el-select{
-  width: 70%;
-}
-</style>
+<style></style>

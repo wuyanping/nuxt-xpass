@@ -119,18 +119,22 @@ export default {
               'end-placeholder': '结束日期'
             },
             inputFormat: row => {
-              if (row) {
+              if (
+                !(
+                  row.registerAtStart == undefined ||
+                  row.registerAtEnd == undefined
+                )
+              ) {
                 return [row.registerAtStart, row.registerAtEnd]
               }
             },
             outputFormat: val => {
-              console.log('outputFormat -- ')
-              console.log(val)
-              if (val) {
-                return {
-                  registerAtStart: val[0],
-                  registerAtEnd: val[1]
-                }
+              if (!val) {
+                return {registerAtStart: '', registerAtEnd: ''}
+              }
+              return {
+                registerAtStart: val[0],
+                registerAtEnd: val[1]
               }
             }
           },

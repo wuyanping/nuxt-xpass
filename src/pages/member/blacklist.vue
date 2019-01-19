@@ -12,10 +12,12 @@
       <div class="el-form-item is-required ml">
         <div class="el-form-item__label">会员账号</div>
         <AsynFilterSelect
+          ref="asynFilterSelect"
           @updateForm="updateForm"
           @updateData="updateData"
           :value="username"
           :asynUpdataFormItem="asynUpdataFormItem"
+          :updateAsynOptions="updateAsynOptions"
         ></AsynFilterSelect>
       </div>
 
@@ -155,17 +157,23 @@ export default {
             },
             // 输入的日期格式
             inputFormat: row => {
-              if (row) {
+              if (
+                !(
+                  row.registerAtStart == undefined ||
+                  row.registerAtEnd == undefined
+                )
+              ) {
                 return [row.registerAtStart, row.registerAtEnd]
               }
             },
             // 输出的日期格式
             outputFormat: val => {
-              if (val) {
-                return {
-                  registerAtStart: val[0],
-                  registerAtEnd: val[1]
-                }
+              if (!val) {
+                return {registerAtStart: '', registerAtEnd: ''}
+              }
+              return {
+                registerAtStart: val[0],
+                registerAtEnd: val[1]
               }
             }
           },
@@ -222,6 +230,7 @@ export default {
         memberId: ''
       },
       username: '',
+      updateAsynOptions: false,
       // 异步需要更新的表单字段
       asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt'],
       // 新增表单内容
@@ -338,8 +347,16 @@ export default {
 
     // 取消表单提交
     cancel() {
+      this.$refs.asynFilterSelect.updateData({
+        key: 'asynOptions',
+        val: []
+      })
+      this.$refs.asynFilterSelect.updateData({
+        key: 'selectValue',
+        val: ''
+      })
       this.$refs.blacklistForm.resetFields()
-      this.username = ''
+      // this.username = ''
       this.dialogConfig.dialogVisible = false
     },
 
@@ -391,7 +408,7 @@ export default {
         border-color: rgb(220, 223, 230);
     }
     .ml{
-        margin-left: 20px;
+        margin-left: 23px;
     }
 }
 </style>
