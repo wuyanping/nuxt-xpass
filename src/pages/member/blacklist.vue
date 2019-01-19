@@ -26,7 +26,7 @@
       ></el-form-renderer>
       <span slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="confirm" :loading="loading"
+        <el-button type="primary" @click="confirm" :disable="disable"
           >确 定</el-button
         >
       </span>
@@ -216,7 +216,7 @@ export default {
         title: '新增黑名单',
         dialogVisible: false
       },
-      loading: false,
+      disable: false,
       // 额外的参数
       extraParams: {
         memberId: ''

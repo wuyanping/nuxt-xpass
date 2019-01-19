@@ -53,6 +53,10 @@ export default {
       if (val.length == 0) {
         return
       }
+      this.$emit('updateData', {
+        key: 'disable',
+        val: true
+      })
       this.$axios
         .$get(`/deepexi-member-center/api/v1/members/getMember/${val}`, {
           params: {}
@@ -76,11 +80,19 @@ export default {
               message: '会员账号不存在！'
             })
           }
+          this.$emit('updateData', {
+            key: 'disable',
+            val: false
+          })
         })
         .catch(err => {
           this.$message({
             type: 'warning',
             message: '服务器错误'
+          })
+          this.$emit('updateData', {
+            key: 'disable',
+            val: false
           })
         })
     },
