@@ -27,7 +27,7 @@ export const isString = val => {
   return Object.prototype.toString.call(val) === '[object String]'
 }
 
-// 判断是否是字符串
+// 判断是否是布尔
 export const isBoolean = val => {
   return Object.prototype.toString.call(val) === '[object Boolean]'
 }

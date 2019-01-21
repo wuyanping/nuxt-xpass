@@ -1,6 +1,5 @@
-// import Vue from 'vue'
 /**
- * 手机
+ * 手机验证
  */
 export const phone = (rule, value, callback) => {
   value = value + ''

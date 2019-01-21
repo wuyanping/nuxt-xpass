@@ -11,24 +11,39 @@
     >
       <div class="el-form-item is-required ml">
         <div class="el-form-item__label">会员账号</div>
-        <AsynFilterSelect
-          ref="asynFilterSelect"
-          @updateForm="updateForm"
-          @updateData="updateData"
-          :value="username"
-          :asynUpdataFormItem="asynUpdataFormItem"
-          :updateAsynOptions="updateAsynOptions"
-        ></AsynFilterSelect>
+        <el-select
+          v-model="selectConfig.value"
+          filterable
+          remote
+          clearable
+          :placeholder="selectConfig.placeholder"
+          :remote-method="remoteMethod"
+          default-first-option
+          :loading="selectConfig.loading"
+          @change="change"
+        >
+          <el-option
+            v-for="item in selectConfig.asynOptions"
+            :key="item.id"
+            :label="item.username"
+            :value="item.username"
+          >
+          </el-option>
+        </el-select>
       </div>
 
       <el-form-renderer
-        label-width="100px"
+        label-width="120px"
         :content="content"
         ref="blacklistForm"
       ></el-form-renderer>
       <span slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="confirm" :disable="disable"
+        <el-button
+          type="primary"
+          @click="confirm"
+          :disabled="dialogConfig.confirmDisable"
+          :loading="dialogConfig.confirmButtonLoading"
           >确 定</el-button
         >
       </span>
@@ -38,17 +53,13 @@
 <script>
 import {STATUS, LEVEL} from '~/const/const'
 import {formatDate, isArray} from '~/const/filter'
-import AsynFilterSelect from '~/components/asynFilterSelect'
+import {memberBlacklists, getMember, memberslist} from '~/const/api'
+// import methodsMixin from '~/mixins/methods'
 
 export default {
   name: 'blacklist',
-  components: {
-    AsynFilterSelect
-  },
   data() {
     return {
-      // 黑名单地址
-      memberUrl: '/deepexi-member-center/api/v1/memberBlacklists',
       // el-data-table 配置
       tableConfig: {
         firstPage: 1,
@@ -58,7 +69,7 @@ export default {
         hasPagination: true,
         hasOperation: true,
         isTree: false,
-        url: '/deepexi-member-center/api/v1/memberBlacklists',
+        url: memberBlacklists,
         hasNew: false,
         hasEdit: false,
         hasView: false,
@@ -222,17 +233,25 @@ export default {
       // 弹框配置
       dialogConfig: {
         title: '新增黑名单',
-        dialogVisible: false
+        dialogVisible: false,
+        confirmDisable: false,
+        confirmButtonLoading: false
       },
-      disable: false,
+      // disabled: false,
       // 额外的参数
       extraParams: {
         memberId: ''
       },
-      username: '',
-      updateAsynOptions: false,
-      // 异步需要更新的表单字段
-      asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt'],
+      // 异步过滤下拉框配置
+      selectConfig: {
+        value: '',
+        placeholder: '输入会员账号可自动搜索，选择后其他信息会自动读取',
+        asynOptions: [], // 异步过滤好的option
+        asynList: [], // 异步获取的list
+        loading: false,
+        asynUpdataFormItem: ['nickName', 'phone', 'levelId', 'registerAt'] // 异步需要更新的表单字段
+      },
+
       // 新增表单内容
       content: [
         {
@@ -334,81 +353,163 @@ export default {
     }
   },
   mounted() {},
+  // mixins: [methodsMixin],
   methods: {
-    // 更新表单
-    updateForm(val) {
-      this.$refs.blacklistForm.updateForm(val)
-    },
-
-    // 更新data的数据
-    updateData({key, val}) {
-      this[key] = val
+    showMessage(type = 'success', tip = '') {
+      switch (type) {
+        case 'success':
+          this.$message({
+            type: 'success',
+            message: tip ? tip : '操作成功'
+          })
+          break
+        case 'error':
+          this.$message({
+            type: 'error',
+            message: tip ? tip : '操作失败'
+          })
+          break
+        case 'warning':
+          this.$message({
+            type: 'warning',
+            message: tip ? tip : '操作失败'
+          })
+          break
+      }
     },
 
     // 取消表单提交
     cancel() {
-      this.$refs.asynFilterSelect.updateData({
-        key: 'asynOptions',
-        val: []
-      })
-      this.$refs.asynFilterSelect.updateData({
-        key: 'selectValue',
-        val: ''
-      })
+      this.selectConfig = {
+        ...this.selectConfig,
+        value: '',
+        asynOptions: []
+      }
       this.$refs.blacklistForm.resetFields()
-      // this.username = ''
       this.dialogConfig.dialogVisible = false
     },
 
     // 表单提交
     confirm() {
-      console.log(this.username)
-      if (this.username.trim().length === 0) {
-        this.$message({
-          type: 'warning',
-          message: '请输入会员账号'
-        })
-        this.$refs.blacklistForm.validate()
+      if (this.selectConfig.value.length === 0) {
+        this.showMessage('warning', '请输入会员账号')
+        this.$refs.blacklistForm.validate(valid => false)
         return
       }
       this.$refs.blacklistForm.validate(valid => {
         if (valid) {
-          this.loading = true
+          this.dialogConfig.confirmButtonLoading = true
           let data = this.$refs.blacklistForm.getFormValue()
+          let {deadline, reason} = data
+          let params = {}
+          params = {
+            ...this.extraParams,
+            deadline,
+            reason
+          }
           this.$axios
-            .$post(this.memberUrl, {
-              memberId: this.extraParams.memberId
-                ? this.extraParams.memberId
-                : '',
-              deadline: data.deadline ? data.deadline : '',
-              reason: data.reason ? data.reason : ''
-            })
+            .$post(memberBlacklists, params)
             .then(resp => {
-              this.loading = false
+              this.dialogConfig.confirmButtonLoading = false
               this.$refs.dataTable.getList()
-              this.$refs.dataTable.showMessage(true)
+              this.showMessage('success')
               this.cancel()
             })
             .catch(err => {
-              this.loading = false
+              this.dialogConfig.confirmButtonLoading = false
             })
         } else {
-          console.log('error submit!!')
           return false
         }
       })
+    },
+
+    // 查找会员账号，自动补全其他会员信息
+    searchMember(val) {
+      if (val.length == 0) {
+        return
+      }
+      let url = `${getMember}/${val}`
+      this.dialogConfig.confirmDisable = true
+      this.$axios
+        .$get(url)
+        .then(resp => {
+          if (resp.payload !== null) {
+            let res = resp.payload
+            let obj = this.asynUpdataForm(res)
+            this.$refs.blacklistForm.updateForm(obj)
+            this.extraParams.memberId = res.id
+          } else {
+            this.showMessage('warning', '会员账号不存在！')
+          }
+          this.dialogConfig.confirmDisable = false
+        })
+        .catch(err => {
+          this.showMessage('error', '服务器错误')
+          this.dialogConfig.confirmDisable = false
+        })
+    },
+
+    // select 值改变的时候触发 远程搜索方法
+    remoteMethod(query) {
+      if (query !== '') {
+        this.selectConfig.loading = true
+        let params = {
+          black: true
+        }
+        setTimeout(() => {
+          this.$axios.$get(memberslist, {params}).then(resp => {
+            let data = resp.payload
+            this.filterMember(data, query)
+          })
+        }, 200)
+      } else {
+        this.selectConfig.asynOptions = []
+      }
+    },
+
+    // 过滤会员
+    filterMember(data, query) {
+      this.selectConfig.loading = false
+      this.selectConfig.asynList = data
+      this.selectConfig.asynOptions = this.selectConfig.asynList.filter(
+        item => {
+          return item.username.toLowerCase().indexOf(query.toLowerCase()) > -1
+        }
+      )
+    },
+
+    // 选中值发生变化时触发
+    change() {
+      let obj = this.asynUpdataForm()
+      this.$refs.blacklistForm.updateForm(obj)
+      this.searchMember(this.selectConfig.value)
+    },
+
+    asynUpdataForm(data) {
+      let obj = {}
+      if (!data) {
+        this.selectConfig.asynUpdataFormItem.forEach(item => {
+          obj[item] = ''
+        })
+      } else {
+        this.selectConfig.asynUpdataFormItem.forEach(item => {
+          obj[item] = data[item]
+        })
+      }
+      return obj
     }
   }
 }
 </script>
-<style scoped lang="stylus">
+<style lang="stylus">
 #blacklist{
-    >>>.el-form-item.is-success .el-input__inner,
-    >>>.el-form-item.is-success .el-input__inner:focus,{
+    .el-form-item.is-success .el-input__inner,
+    .el-form-item.is-success .el-input__inner:focus,{
         border-color: rgb(220, 223, 230);
     }
     .ml{
-        margin-left: 23px;
+        margin-left: 43px;
     }
 }
 </style>

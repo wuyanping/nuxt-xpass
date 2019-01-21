@@ -20,6 +20,7 @@
 <script>
 import uploadToAli from '@femessage/upload-to-ali'
 import {phone} from '~/const/validate'
+import {membersAdd} from '~/const/api'
 
 export default {
   name: 'newMember',
@@ -172,7 +173,7 @@ export default {
           let data = {}
           data = Object.assign({}, this.$refs.basicForm.getFormValue())
           this.$axios
-            .$post(this.url, data)
+            .$post(membersAdd, data)
             .then(resp => {
               if (resp.code == '0') {
                 this.$message({
@@ -202,21 +203,6 @@ export default {
 
     cancel() {
       this.$router.go(-1)
-    },
-
-    // 验证 会员名称的唯一性reName
-    reName(rule, value, callback) {
-      value = value + ''
-      let params = {
-        username: value
-      }
-      this.$axios.$get(rule.route, {params: params}).then(resp => {
-        if (resp.payload.content.length > 0) {
-          callback(new Error(rule.tip + '已存在'))
-        } else {
-          callback()
-        }
-      })
     }
   }
 }
